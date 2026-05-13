@@ -43,6 +43,7 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), primary_key=True),
         sa.Column("serial_number", sa.String(length=6), nullable=False, unique=True),
         sa.Column("available", sa.Boolean(), nullable=False, server_default=sa.true()),
+        sa.Column("borrow_time", sa.DateTime(timezone=True), nullable=True),
         sa.Column("edition_id", sa.Integer(), sa.ForeignKey("editions.id", ondelete="RESTRICT"), nullable=False),
         sa.Column(
             "library_card_number",
