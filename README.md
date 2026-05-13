@@ -4,7 +4,7 @@ Minimalny szkielet aplikacji FastAPI z klasycznym podziałem na warstwy.
 
 ## Baza danych
 
-- domyślnie PostgreSQL pod `postgresql+psycopg://postgres:postgres@localhost:5432/momentum_task`
+- konfiguracja bazy jest pobierana ze zmiennej `DATABASE_URL` (plik `.env`)
 - migracje Alembic są w katalogu `alembic/`
 - pierwsza migracja tworzy tabele `editions`, `readers` i `books`
 
@@ -34,6 +34,16 @@ Jeśli chcesz uruchomić lokalnie, ustaw `DATABASE_URL` w `.env` na własną ins
 ## Uruchomienie Docker Compose
 
 Najprostsza opcja uruchomienia całego środowiska (API + PostgreSQL):
+
+1. Skopiuj plik przykładowy:
+
+```bash
+cp .env.example .env
+```
+
+2. Ustaw własne wartości (minimum: `POSTGRES_PASSWORD`) w `.env`.
+
+3. Uruchom:
 
 ```bash
 docker compose up
