@@ -17,6 +17,7 @@ Jeśli chcesz uruchomić lokalnie, ustaw `DATABASE_URL` w `.env` na własną ins
 - `books` - fizyczne egzemplarze z unikalnym 6-cyfrowym numerem seryjnym
 - książka ma pole `available` (`true`/`false`)
 - `library_card_number` jest ustawiany przy wypożyczeniu i czyszczony przy zwrocie
+- `borrow_time` zapisuje lokalny czas wypożyczenia (`datetime` z lokalną strefą), a przy zwrocie jest czyszczony
 
 ## Struktura
 
@@ -167,7 +168,8 @@ Przykładowa odpowiedź:
   "message": "Book is now borrowed.",
   "serial_number": "000001",
   "available": false,
-  "library_card_number": "000001"
+  "library_card_number": "000001",
+  "borrow_time": "2026-05-13T10:15:30.123456+02:00"
 }
 ```
 
@@ -190,6 +192,7 @@ Przykładowa odpowiedź:
       "edition_author": "Stanislaw Lem",
       "edition_isbn": "9780156027607",
       "library_card_number": "000001",
+      "borrow_time": "2026-05-13T10:15:30.123456+02:00",
       "reader_first_name": "Jan",
       "reader_last_name": "Kowalski"
     }
@@ -229,4 +232,6 @@ Zasada działania `book_borrow`:
 - jeśli ustawiasz `borrowed=true`, wymagane jest `library_card_number`
 - nieistniejący `serial_number` zwraca 404
 - nieistniejący `library_card_number` zwraca 404
+- przy `borrowed=true` API zapisuje `borrow_time` jako `datetime.now().astimezone()`
+- przy `borrowed=false` API czyści `borrow_time`
 - jeśli status się nie zmienia, endpoint zwraca `changed=false`

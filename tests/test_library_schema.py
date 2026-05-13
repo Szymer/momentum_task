@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
@@ -204,6 +206,7 @@ def _make_engine_with_edition_and_book(borrowed: bool = False):
                 available=False,
                 edition_id=edition.id,
                 library_card_number=reader.library_card_number,
+                borrow_time=datetime.now().astimezone(),
             )
         else:
             book = Book(
@@ -261,6 +264,7 @@ def test_book_borrow_reports_unchanged_when_status_already_set() -> None:
     body = response.json()
     assert body["changed"] is False
     assert body["available"] is True
+    assert body["borrow_time"] is None
 
 
 def test_book_borrow_changes_status_to_borrowed() -> None:
@@ -290,6 +294,31 @@ def test_book_borrow_changes_status_to_borrowed() -> None:
     assert body["changed"] is True
     assert body["available"] is False
     assert body["library_card_number"] == reader_card_number
+    assert body["borrow_time"] is not None
+
+
+def test_book_borrow_clears_borrow_time_on_return() -> None:
+    engine = _make_engine_with_edition_and_book(borrowed=True)
+
+    def override_get_db():
+        with Session(engine) as session:
+            yield session
+
+    app.dependency_overrides[get_db] = override_get_db
+    try:
+        response = TestClient(app).patch(
+            "/api/v1/book_borrow",
+            json={"serial_number": "000001", "borrowed": False},
+        )
+    finally:
+        app.dependency_overrides.clear()
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["changed"] is True
+    assert body["available"] is True
+    assert body["library_card_number"] is None
+    assert body["borrow_time"] is None
 
 
 def test_book_borrow_fails_for_non_existing_reader() -> None:

@@ -1,4 +1,6 @@
-from pydantic import BaseModel, ConfigDict, Field, AliasChoices, StrictStr
+from datetime import datetime
+
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field, StrictStr
 
 
 class BookAddRequest(BaseModel):
@@ -40,6 +42,7 @@ class BookListItem(BaseModel):
     edition_author: str
     edition_isbn: str
     library_card_number: str | None
+    borrow_time: datetime | None
     reader_first_name: str | None
     reader_last_name: str | None
 
@@ -64,3 +67,4 @@ class BookBorrowResponse(BaseModel):
     serial_number: str
     available: bool
     library_card_number: str | None
+    borrow_time: datetime | None

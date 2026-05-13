@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -98,6 +100,7 @@ def book_borrow(payload: BookBorrowRequest, db: Session = Depends(get_db)) -> Bo
             serial_number=book.serial_number,
             available=book.available,
             library_card_number=book.library_card_number,
+            borrow_time=book.borrow_time,
         )
 
     if payload.borrowed and payload.library_card_number is None:
@@ -120,6 +123,7 @@ def book_borrow(payload: BookBorrowRequest, db: Session = Depends(get_db)) -> Bo
 
     book.available = desired_available
     book.library_card_number = payload.library_card_number if payload.borrowed else None
+    book.borrow_time = datetime.now().astimezone() if payload.borrowed else None
     db.commit()
     db.refresh(book)
 
@@ -129,6 +133,7 @@ def book_borrow(payload: BookBorrowRequest, db: Session = Depends(get_db)) -> Bo
         serial_number=book.serial_number,
         available=book.available,
         library_card_number=book.library_card_number,
+        borrow_time=book.borrow_time,
     )
 
 
@@ -150,6 +155,7 @@ def books_list(db: Session = Depends(get_db)) -> BookListResponse:
             edition_author=edition.author,
             edition_isbn=edition.isbn,
             library_card_number=book.library_card_number,
+            borrow_time=book.borrow_time,
             reader_first_name=reader.first_name if (not book.available and reader is not None) else None,
             reader_last_name=reader.last_name if (not book.available and reader is not None) else None,
         )

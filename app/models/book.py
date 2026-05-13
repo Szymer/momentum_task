@@ -1,4 +1,6 @@
-from sqlalchemy import Boolean, CheckConstraint, ForeignKey, Integer, String
+from datetime import datetime
+
+from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -27,6 +29,7 @@ class Book(Base):
         nullable=True,
         index=True,
     )
+    borrow_time: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     edition = relationship("Edition", back_populates="books")
     reader = relationship("Reader", back_populates="books")
