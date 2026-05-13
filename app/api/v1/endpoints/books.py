@@ -44,11 +44,11 @@ def _get_or_create_edition(db: Session, payload: BookAddRequest) -> Edition:
     )
 
 
-def _generate_serial_number(db: Session) -> int:
+def _generate_serial_number(db: Session) -> str:
     max_serial_number = db.scalar(select(func.max(Book.serial_number)))
-    next_serial_number = 100000 if max_serial_number is None else max_serial_number + 1
+    next_serial_number = "000001" if max_serial_number is None else f"{int(max_serial_number) + 1:06d}"
 
-    if next_serial_number > 999999:
+    if next_serial_number > "999999":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="No more six-digit serial numbers are available.",
@@ -97,17 +97,21 @@ def book_borrow(payload: BookBorrowRequest, db: Session = Depends(get_db)) -> Bo
             message=f"Book is already {'available' if desired_available else 'borrowed'}.",
             serial_number=book.serial_number,
             available=book.available,
-            reader_id=book.reader_id,
+            library_card_number=book.library_card_number,
         )
 
-    if payload.borrowed and payload.reader_id is None:
+    if payload.borrowed and payload.library_card_number is None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="reader_id is required when borrowing a book.",
+            detail="library_card_number is required when borrowing a book.",
         )
 
     if payload.borrowed:
-        reader_exists = db.scalar(select(Reader.id).where(Reader.id == payload.reader_id))
+        reader_exists = db.scalar(
+            select(Reader.library_card_number).where(
+                Reader.library_card_number == payload.library_card_number
+            )
+        )
         if reader_exists is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -115,7 +119,7 @@ def book_borrow(payload: BookBorrowRequest, db: Session = Depends(get_db)) -> Bo
             )
 
     book.available = desired_available
-    book.reader_id = payload.reader_id if payload.borrowed else None
+    book.library_card_number = payload.library_card_number if payload.borrowed else None
     db.commit()
     db.refresh(book)
 
@@ -124,14 +128,16 @@ def book_borrow(payload: BookBorrowRequest, db: Session = Depends(get_db)) -> Bo
         message=f"Book is now {'available' if desired_available else 'borrowed'}.",
         serial_number=book.serial_number,
         available=book.available,
-        reader_id=book.reader_id,
+        library_card_number=book.library_card_number,
     )
 
 
 @router.get("/books", response_model=BookListResponse)
 def books_list(db: Session = Depends(get_db)) -> BookListResponse:
     rows = db.execute(
-        select(Book, Edition).join(Edition, Book.edition_id == Edition.id)
+        select(Book, Edition, Reader)
+        .join(Edition, Book.edition_id == Edition.id)
+        .outerjoin(Reader, Book.library_card_number == Reader.library_card_number)
     ).all()
 
     items = [
@@ -143,9 +149,11 @@ def books_list(db: Session = Depends(get_db)) -> BookListResponse:
             edition_title=edition.title,
             edition_author=edition.author,
             edition_isbn=edition.isbn,
-            reader_id=book.reader_id,
+            library_card_number=book.library_card_number,
+            reader_first_name=reader.first_name if (not book.available and reader is not None) else None,
+            reader_last_name=reader.last_name if (not book.available and reader is not None) else None,
         )
-        for book, edition in rows
+        for book, edition, reader in rows
     ]
 
     return BookListResponse(total=len(items), books=items)

@@ -10,6 +10,7 @@ from app.schemas.book import (
     BookListItem,
     BookListResponse,
 )
+from app.schemas.reader import ReaderAddRequest, ReaderAddResponse
 
 __all__ = [
     "BookAddRequest",
@@ -20,5 +21,7 @@ __all__ = [
     "BookDeleteResponse",
     "BookListItem",
     "BookListResponse",
+    "ReaderAddRequest",
+    "ReaderAddResponse",
 ]
 

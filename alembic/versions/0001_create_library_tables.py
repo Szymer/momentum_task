@@ -29,11 +29,11 @@ def upgrade() -> None:
     op.create_table(
         "readers",
         sa.Column("id", sa.Integer(), primary_key=True),
-        sa.Column("library_card_number", sa.Integer(), nullable=False, unique=True),
+        sa.Column("library_card_number", sa.String(length=6), nullable=False, unique=True),
         sa.Column("first_name", sa.String(length=100), nullable=False),
         sa.Column("last_name", sa.String(length=100), nullable=False),
         sa.CheckConstraint(
-            "library_card_number BETWEEN 100000 AND 999999",
+            "length(library_card_number) = 6",
             name="ck_readers_library_card_number_six_digits",
         ),
     )
@@ -41,26 +41,31 @@ def upgrade() -> None:
     op.create_table(
         "books",
         sa.Column("id", sa.Integer(), primary_key=True),
-        sa.Column("serial_number", sa.Integer(), nullable=False, unique=True),
+        sa.Column("serial_number", sa.String(length=6), nullable=False, unique=True),
         sa.Column("available", sa.Boolean(), nullable=False, server_default=sa.true()),
         sa.Column("edition_id", sa.Integer(), sa.ForeignKey("editions.id", ondelete="RESTRICT"), nullable=False),
-        sa.Column("reader_id", sa.Integer(), sa.ForeignKey("readers.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "library_card_number",
+            sa.String(length=6),
+            sa.ForeignKey("readers.library_card_number", ondelete="SET NULL"),
+            nullable=True,
+        ),
         sa.CheckConstraint(
-            "serial_number BETWEEN 100000 AND 999999",
+            "length(serial_number) = 6",
             name="ck_books_serial_number_six_digits",
         ),
     )
 
     op.create_index("ix_books_available", "books", ["available"])
     op.create_index("ix_books_edition_id", "books", ["edition_id"])
-    op.create_index("ix_books_reader_id", "books", ["reader_id"])
+    op.create_index("ix_books_library_card_number", "books", ["library_card_number"])
     op.create_index("ix_books_serial_number", "books", ["serial_number"])
 
 
 def downgrade() -> None:
     op.drop_index("ix_books_available", table_name="books")
     op.drop_index("ix_books_serial_number", table_name="books")
-    op.drop_index("ix_books_reader_id", table_name="books")
+    op.drop_index("ix_books_library_card_number", table_name="books")
     op.drop_index("ix_books_edition_id", table_name="books")
     op.drop_table("books")
     op.drop_table("readers")

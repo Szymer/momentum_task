@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, Field, AliasChoices
+from pydantic import BaseModel, ConfigDict, Field, AliasChoices, StrictStr
 
 
 class BookAddRequest(BaseModel):
@@ -8,10 +8,9 @@ class BookAddRequest(BaseModel):
 
 
 class BookDeleteRequest(BaseModel):
-    serial_number: int = Field(
+    serial_number: StrictStr = Field(
         validation_alias=AliasChoices("serial_number", "serialNumber", "serialnumber"),
-        ge=100000,
-        le=999999,
+        pattern=r"^\d{6}$",
     )
 
 
@@ -19,7 +18,7 @@ class BookAddResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     book_id: int
-    serial_number: int
+    serial_number: str
     available: bool
     edition_id: int
     edition_title: str
@@ -29,18 +28,20 @@ class BookAddResponse(BaseModel):
 
 class BookDeleteResponse(BaseModel):
     deleted: bool
-    serial_number: int
+    serial_number: str
 
 
 class BookListItem(BaseModel):
     book_id: int
-    serial_number: int
+    serial_number: str
     available: bool
     edition_id: int
     edition_title: str
     edition_author: str
     edition_isbn: str
-    reader_id: int | None
+    library_card_number: str | None
+    reader_first_name: str | None
+    reader_last_name: str | None
 
 
 class BookListResponse(BaseModel):
@@ -49,18 +50,17 @@ class BookListResponse(BaseModel):
 
 
 class BookBorrowRequest(BaseModel):
-    serial_number: int = Field(
+    serial_number: StrictStr = Field(
         validation_alias=AliasChoices("serial_number", "serialNumber", "serialnumber"),
-        ge=100000,
-        le=999999,
+        pattern=r"^\d{6}$",
     )
     borrowed: bool
-    reader_id: int | None = None
+    library_card_number: StrictStr | None = Field(default=None, pattern=r"^\d{6}$")
 
 
 class BookBorrowResponse(BaseModel):
     changed: bool
     message: str
-    serial_number: int
+    serial_number: str
     available: bool
-    reader_id: int | None
+    library_card_number: str | None
