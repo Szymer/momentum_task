@@ -1,14 +1,25 @@
-# Momentum Task
+## Opis projektu
 
-Minimalny szkielet aplikacji FastAPI z klasycznym podziałem na warstwy.
+Projekt udostępnia proste API systemu bibliotecznego oparte o FastAPI i PostgreSQL.
+Aplikacja pozwala zarządzać egzemplarzami książek, dostępnością oraz przypisaniem wypożyczeń do czytelników.
+
+Model danych jest znormalizowany, co ogranicza duplikację danych i ułatwia rozwój systemu (np. statystyki, historia wypożyczeń, rezerwacje).
+
+## Możliwe kierunki rozwoju
+
+- tabela historii wypożyczeń
+- system rezerwacji książek
+- uwierzytelnianie i autoryzacja użytkowników
+- logowanie operacji
+- paginacja i filtrowanie wyników
+- asynchroniczna obsługa bazy danych
+
 
 ## Baza danych
 
 - konfiguracja bazy jest pobierana ze zmiennej `DATABASE_URL` (plik `.env`)
 - migracje Alembic są w katalogu `alembic/`
 - pierwsza migracja tworzy tabele `editions`, `readers` i `books`
-
-Jeśli chcesz uruchomić lokalnie, ustaw `DATABASE_URL` w `.env` na własną instancję Postgresa.
 
 ## Model danych
 
